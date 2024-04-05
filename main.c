@@ -95,8 +95,8 @@ int GuardarAgenda(TipoPersona *personas, int numPersonas){
 
     printf("Dame un nombre del fichero terminado en .txt:\n");
     scanf("%s", NombreFichero);
-    FILE *fichero = fopen(NombreFichero, "w");
-    while (fichero != NULL){
+    FILE *fichero = fopen(NombreFichero, "r");
+    if (fichero != NULL){
         printf("Ya existe. ¿Quieres sobreescribirlo?\n");
         printf("\t[0] SI\n");
         printf("\t[1] NO\n");
@@ -116,10 +116,14 @@ int GuardarAgenda(TipoPersona *personas, int numPersonas){
             }
         }
     }
+
+    fichero = fopen(NombreFichero, "w");
     for (int i = 0; i < numPersonas; ++i) {
-        fprintf(fichero, "%i %s %s %i %i %s" , i + 1, personas[i].nombre, personas[i].apellidos, personas[i].telefono, personas[i].edad,
+        fprintf(fichero, "%i %s %s %i %i %s", i + 1, personas[i].nombre, personas[i].apellidos,
+                personas[i].telefono, personas[i].edad,
                 imprimirContacto(personas[i].tipo));
         printf("\n");
+
     }
     fclose(fichero);
     fichero = fopen(NombreFichero, "r");
