@@ -2,127 +2,192 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Constantes para la lista
-#define MAXCHAR 30
-#define TAMANIO_LISTA 50
+#define TAMANIO_LISTA 100
+#define MAXCHAR 50
 
-// Tipo enumerado para el contacto
-enum tipoContacto {
+
+enum Agenda{
+    Listado = 1,
+    Nueva_Persona = 2,
+    Borrar_Persona = 3,
+    Guardar_Agenda = 4,
+    Salir = 0
+};
+
+
+enum TipoContacto{
     FAVORITO,
     CONOCIDO,
     TRABAJO
 };
 
-// Tipo para las personas
+
 typedef struct {
     char nombre[MAXCHAR];
     char apellidos[MAXCHAR];
+    int telefono;
     int edad;
-    enum tipoContacto tipo;
-} tipoPersona;
+    enum TipoContacto tipo;
+}TipoPersona;
 
-// Tipo para la agenda
-typedef struct {
-    tipoPersona *personas;
-    int numPersonas;
-} tipoAgenda;
 
-// Función para creación de la agenda
-tipoAgenda creaAgenda();
+char *imprimirContacto(enum TipoContacto tipo){
+    switch (tipo) {
+        case FAVORITO: return "Favorito";
+        case CONOCIDO: return "Conocido";
+        case TRABAJO: return "Trabajo";
+    }
+}
 
-// Función para imprimir el tipo de contacto
-char *imprimeTipoContacto(enum tipoContacto);
+void mostrarListado(TipoPersona *personas, int numPersonas){
+    for (int i = 0; i < numPersonas; ++i) {
+        printf("%i; %s; %s; %i; %i; %s;\n",i+1, personas[i].nombre, personas[i].apellidos, personas[i].telefono, personas[i].edad,
+               imprimirContacto(personas[i].tipo));
+    }
+}
 
-// Listado de contactos
-void listadoContactos(tipoAgenda);
+void NuevaPersona(TipoPersona *personas, int numPersonas){
+    printf("Dame el nombre de la persona\n");
+    scanf("%s", personas[numPersonas-1].nombre);
+    printf("Dame el apellido de la persona\n");
+    scanf("%s", personas[numPersonas-1].apellidos);
+    printf("Dame el telefono de la persona\n");
+    scanf("%i", &personas[numPersonas-1].telefono);
+    printf("Dame la edad de la persona\n");
+    scanf("%i", &personas[numPersonas-1].edad);
+    printf("Dame el tipo de contacto que es la persona\n");
+    printf("\t[0] = Favorito\n");
+    printf("\t[1] = Conocido\n");
+    printf("\t[2] = Trabajo\n");
+    scanf("%i", &personas[numPersonas-1].tipo);
 
-int main() {
+}
 
-    tipoAgenda agenda = creaAgenda();
+void BorrarPersona(TipoPersona *personas, int *numPersonas){
+    int elec, seg;
+    printf("Que contacto quieres borrar:\n ");
+    mostrarListado(personas, *numPersonas);
+    printf("Di el numero de la persona que desea borrar:\n ");
+    scanf("%i", &elec);
+    printf("¿Estas seguro? \n"
+           "\t[1] Si.\n"
+           "\t[2] No.\n");
+    scanf("%i", &seg);
+    if (seg == 1){
+        for (int i = (elec - 1); i < *numPersonas; ++i) {
+            personas[i] = personas[i+1];
+        }
+    }
+    (*numPersonas)--;
+    printf("\n");
+    mostrarListado(personas, *numPersonas);
+    printf("\n");
 
-    // Menu principal
+}
+
+#define NOMBRE 1000
+
+int GuardarAgenda(TipoPersona *personas, int numPersonas){
+    char NombreFichero[NOMBRE];
+    char linea[10000];
+    int seguro;
     int opcion;
 
+    printf("Dame un nombre del fichero terminado en .txt:\n");
+    scanf("%s", NombreFichero);
+    FILE *fichero = fopen(NombreFichero, "w");
+    while (fichero != NULL){
+        printf("Ya existe. ¿Quieres sobreescribirlo?\n");
+        printf("\t[0] SI\n");
+        printf("\t[1] NO\n");
+        scanf("%i", &seguro);
+        while(seguro == 1){
+            fclose(fichero);
+            printf("¿Quieres salir o poner otro nombre?\n");
+            printf("\t[1] Salir\n");
+            printf("\t[2] Poner nombre\n");
+            scanf("%i", &opcion);
+            if (opcion == 1){
+                return 0;
+            }else{
+                printf("Dame un nombre terminado en .txt\n");
+                gets(NombreFichero);
+                fichero = fopen(NombreFichero, "r");
+            }
+        }
+    }
+    for (int i = 0; i < numPersonas; ++i) {
+        fprintf(fichero, "%i %s %s %i %i %s" , i + 1, personas[i].nombre, personas[i].apellidos, personas[i].telefono, personas[i].edad,
+                imprimirContacto(personas[i].tipo));
+        printf("\n");
+    }
+    fclose(fichero);
+    fichero = fopen(NombreFichero, "r");
+    while(!feof(fichero)){
+        fgets(linea, 20, fichero);
+        printf("%s", linea);
+    }
+}
 
-    do {
-        printf("\n --- MENU --- \n");
-        printf("1. Listado de personas\n");
-        printf("2. Nueva persona\n");
-        printf("3. Borrar persona\n");
-        printf("4. Guardar agenda en fichero de texto\n");
-        printf("5. Leer agenda de fichero de texto\n");
-        printf("0. SALIR\n");
 
-        printf("\nElija una opción: ");
-        scanf("%i", &opcion);
+int main() {
+    int num = 1;
+    int numPersonas = 0;
+    int *fichero;
+    TipoPersona *personas = malloc(sizeof(TipoPersona) * TAMANIO_LISTA);
+    if (personas == NULL){
+        printf("No hay memoria");
+        return -1;
+    }
 
-        switch (opcion) {
-            case 1:
-                listadoContactos(agenda);
+//    strcpy(personas[0].nombre, "Alberto");
+//    strcpy(personas[0].apellidos, "Garcia");
+//    personas[0].edad = 30;
+//    personas[0].telefono = 6550284;
+//    personas[0].tipo = CONOCIDO;
+//    numPersonas++;
+
+    while (num != 0) {
+        printf("1-Listado de personas\n");
+        printf("2-Nueva persona\n");
+        printf("3-Borrar persona\n");
+        printf("4-Guardar agenda en fichero\n");
+        printf("5-\n");
+        printf("0-Salir\n");
+        printf("Elige una opcion:\n");
+        scanf("%i", &num);
+
+
+        switch (num) {
+            case Listado:
+                printf("Has elegido la opcion listado\n");
+                mostrarListado(personas, numPersonas);
                 break;
-            case 2:
-                // Por completar
-                //addPersona(&agenda);
+            case Nueva_Persona:
+                printf("Has elegido la opcion nueva personas\n");
+                numPersonas++;
+                NuevaPersona(personas, numPersonas);
+                mostrarListado(personas, numPersonas);
                 break;
-            case 3:
-                // Por completar
-                // removePersona(&agenda);
+            case Borrar_Persona:
+                printf("Has elegido la opcion borrar personas\n");
+                BorrarPersona(personas, &numPersonas);
+                //mostrarListado(personas, numPersonas);
                 break;
-            case 4:
+            case Salir:
+                printf("Has elegido la opcion salir\n");
+                mostrarListado(personas, numPersonas);
+                num = 0;
                 break;
-            case 5:
-                break;
-            case 0:
-                printf("\nAdios\n");
+            case Guardar_Agenda:
+                GuardarAgenda(personas, numPersonas);
+                printf("%i\n", fichero);
                 break;
             default:
-                printf("\nOpcion incorrecta\n");
+                printf("No has elegido ninguna de las opciones que se pueden elegir\n");
         }
-    } while (opcion != 0);
-
-    // Liberación de memoria antes de terminar
-    free(agenda.personas);
-}
-
-
-tipoAgenda creaAgenda() {
-    // Creación de agenda
-    tipoAgenda agenda;
-
-    // Cero personas
-    agenda.numPersonas = 0;
-    // Lista inicial de TAMANIO_LISTA
-    agenda.personas = malloc(sizeof(tipoPersona) * TAMANIO_LISTA);
-    if (agenda.personas == NULL) {
-        printf("No hay memoria.");
-        agenda.numPersonas = -1;
-        return agenda;
     }
 
-    // Adición de una persona (hay que implementar la opción 2 del menu principal(
-    strcpy(agenda.personas[0].nombre,"Antoine");
-    strcpy(agenda.personas[0].apellidos,"Griezmann");
-    agenda.personas[0].edad = 30;
-    agenda.personas[0].tipo = CONOCIDO;
-    agenda.numPersonas++;
-
-    return agenda;
-}
-
-char *imprimeTipoContacto(enum tipoContacto tipo) {
-    switch (tipo) {
-        case FAVORITO: return "FAVORITO";
-        case CONOCIDO: return "CONOCIDO";
-        case TRABAJO: return "TRABAJO";
-        default: return "Tipo desconocido";
-    }
-}
-
-void listadoContactos(tipoAgenda agenda) {
-    printf("\n");
-    for (int i = 0; i < agenda.numPersonas; ++i) {
-        printf("%i;%s;%s;%s",i+1, agenda.personas[i].nombre, agenda.personas[i].apellidos,
-               imprimeTipoContacto(agenda.personas[i].tipo));
-    }
-    printf("\n");
+    free(personas);
+    return 0;
 }
